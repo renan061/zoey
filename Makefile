@@ -8,7 +8,7 @@ CFLAGS := -std=c99 -O0 -Wall
 main: clean
 
 run: clean setup
-	@- go run main.go
+	@- go run zoey.go
 
 ctest: clean setup
 	@- echo "-------------------------"
@@ -17,6 +17,16 @@ ctest: clean setup
 
 test: setup
 	@- go test ./...
+
+ex: setup
+	@- gcc -c ex/stack.c -o ex/stack.o
+	@- gcc ex/stack.o ex/assert.c -o ex/assert.out
+	@- ./ex/assert.out
+
+	@- gcc ex/output.c -o ex/output.out
+	@- ./ex/output.out &> ex/output.result 
+
+	@- rm -f ex/*.out ex/*.o ex/*.result
 
 setup:
 	@- go fmt ./...

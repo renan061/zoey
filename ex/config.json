@@ -1,0 +1,13 @@
+{
+	"name": "stack",
+	"directory": "ex",
+	"assert": {
+		"main": "assert.c",
+		"objects": [
+			{
+				"header": "stack.h",
+				"source": "stack.c"
+			}
+		]
+	}
+}
