@@ -4,9 +4,14 @@ import (
 	"fmt"
 )
 
+// [name] [flags] [arguments]
 type withflags struct {
 	basic
 	flags []string
+}
+
+func (cmd *withflags) AddFlags(flags ...string) {
+	cmd.flags = append(cmd.flags, flags...)
 }
 
 func (cmd withflags) Run() *Result {

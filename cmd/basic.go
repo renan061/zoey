@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+// [name] [arguments]
 type basic struct {
 	name      string
 	timeout   int
@@ -16,6 +17,9 @@ type basic struct {
 
 func (cmd *basic) AddArguments(arguments ...string) {
 	cmd.arguments = append(cmd.arguments, arguments...)
+}
+
+func (cmd *basic) AddFlags(flags ...string) {
 }
 
 func (cmd *basic) ResetArguments() {
@@ -50,8 +54,8 @@ func (cmd basic) Run() *Result {
 	}
 	execCmd.Wait()
 
-	result.StdOut = string(stdoutBytes)
-	result.StdErr = string(stderrBytes)
+	result.StdOut = StdOut(stdoutBytes)
+	result.StdErr = StdErr(stderrBytes)
 	result.Ok = execCmd.ProcessState.Success() && result.StdErr == ""
 	result.Err = nil
 

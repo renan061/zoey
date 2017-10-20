@@ -1,0 +1,5 @@
+Crie uma função "factorial", recursiva, com a assinatura dada abaixo em um
+módulo a parte (factorial.h / factorial.c). A função deve retornar o valor do
+fatorial de um valor dado.
+
+void factorial(int n);

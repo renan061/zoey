@@ -1,0 +1,50 @@
+{
+    "name": "factorial",
+    "directory": "factorial",
+    "objects": [
+        {
+            "name": "factorial.o",
+            "header": "factorial.h",
+            "source": "factorial.c"
+        }
+    ],
+    "tests": [
+        {
+            "name": "factorial0",
+            "description": "Fatorial de 0 é igual a 0.",
+            "value": 10,
+            "main": "fact0.c",
+            "expected": "1"
+        }, {
+            "name": "factorial1",
+            "description": "Fatorial de 1 é igual a 1.",
+            "value": 10,
+            "main": "fact1.c",
+            "expected": "1"
+        }, {
+            "name": "factorial2",
+            "description": "Fatorial de 2 é igual a 2.",
+            "value": 10,
+            "main": "fact2.c",
+            "expected": "2"
+        }, {
+            "name": "factorial3",
+            "description": "Fatorial de 3 é igual a 6.",
+            "value": 30,
+            "main": "fact3.c",
+            "expected": "6"
+        }, {
+            "name": "factorial9",
+            "description": "Fatorial de 9 é igual a 362880.",
+            "value": 40,
+            "main": "fact9.c",
+            "expected": "362880"
+        }, {
+            "name": "assert",
+            "description": "Testes diversos.",
+            "value": 50,
+            "main": "assert.c",
+            "expected": ""
+        }
+    ]
+}
