@@ -50,7 +50,7 @@ func main() {
 	assignment.TearDown()
 
 	grade, failures := assignment.Grade()
-	fmt.Println("-- Nota final:", grade)
+	fmt.Printf("-- Nota final: %d/100\n", grade)
 	for _, failure := range failures {
 		fmt.Println("- Falhou no teste " + failure)
 	}

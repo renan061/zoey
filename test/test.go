@@ -39,8 +39,6 @@ type (
 	Object struct {
 		// The name of the object file.
 		Name string `json:"name"`
-		// The header file containing the exported functions from source.
-		Header string `json:"header"`
 		// The object implementation file.
 		Source string `json:"source"`
 	}
@@ -101,7 +99,6 @@ func SetUp(compiler cmd.Cmd, configuration string) (*Assignment, error) {
 	// sets header and source paths to absolute path
 	for _, object := range asgmt.Objects {
 		object.Name = asgmt.tempdir + "/" + object.Name
-		object.Header = asgmt.Directory + "/" + object.Header
 		object.Source = asgmt.Directory + "/" + object.Source
 	}
 

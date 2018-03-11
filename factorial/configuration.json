@@ -4,7 +4,6 @@
     "objects": [
         {
             "name": "factorial.o",
-            "header": "factorial.h",
             "source": "factorial.c"
         }
     ],
