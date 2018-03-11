@@ -6,7 +6,7 @@ import (
 
 type (
 	Cmd interface {
-		Run() *Result
+		Run() Result
 		AddArguments(...string)
 		AddFlags(...string)
 		ResetArguments()
@@ -26,13 +26,11 @@ type (
 )
 
 func New(name string, timeout int, flags ...string) Cmd {
+	basic := &basic{name: name, timeout: timeout}
 	if len(flags) < 1 {
-		return &basic{name: name, timeout: timeout}
+		return basic
 	} else {
-		return &withflags{
-			basic: basic{name: name, timeout: timeout},
-			flags: flags,
-		}
+		return &withflags{basic: *basic, flags: flags}
 	}
 }
 
@@ -44,7 +42,7 @@ func (result Result) Dump() {
 	}
 
 	if !result.Ok {
-		fmt.Println("test failed")
+		fmt.Println("cmd.Ok: false")
 	}
 
 	result.StdOut.Dump()
@@ -54,17 +52,17 @@ func (result Result) Dump() {
 func (stdout StdOut) Dump() {
 	str := string(stdout)
 	if str != "" {
-		fmt.Printf("stdout: \n%s\n", str)
+		fmt.Printf("cmd.StdOut: \n%s\n", str)
 	} else {
-		fmt.Printf("stdout is empty\n")
+		fmt.Printf("cmd.StdOut: empty\n")
 	}
 }
 
 func (stderr StdErr) Dump() {
 	str := string(stderr)
 	if str != "" {
-		fmt.Printf("stderr: %s\n", str)
+		fmt.Printf("cmd.StdErr: %s\n", str)
 	} else {
-		fmt.Printf("stderr is empty\n")
+		fmt.Printf("cmd.StdErr: empty\n")
 	}
 }

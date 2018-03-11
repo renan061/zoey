@@ -14,7 +14,7 @@ func (cmd *withflags) AddFlags(flags ...string) {
 	cmd.flags = append(cmd.flags, flags...)
 }
 
-func (cmd withflags) Run() *Result {
+func (cmd withflags) Run() Result {
 	cmd.arguments = append(cmd.flags, cmd.arguments...)
 	return cmd.basic.Run()
 }

@@ -26,13 +26,13 @@ func (cmd *basic) ResetArguments() {
 	cmd.arguments = []string{}
 }
 
-func (cmd basic) Run() *Result {
+func (cmd basic) Run() Result {
 	timeout := time.Duration(cmd.timeout) * time.Second
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	execCmd := exec.CommandContext(ctx, cmd.name, cmd.arguments...)
 
-	result := &Result{}
+	result := Result{}
 
 	stderrPipe, err := execCmd.StderrPipe()
 	if result.Err = err; err != nil {

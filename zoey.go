@@ -9,29 +9,49 @@ import (
 )
 
 func main() {
-	// TODO: Constants or read from file
-	compiler := cmd.New("gcc-7", 10, "-std=c99", "-Wall")
+	// TODO: read from file
+	compiler := cmd.New("gcc", 10, "-std=c99", "-Wall")
 
-	assignment, err := test.Setup(compiler, "./factorial/configuration.json")
+	assignment, err := test.SetUp(compiler, "./factorial/configuration.json")
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	_, err = assignment.CompileObjects(compiler)
-	if err != nil {
-		fmt.Println(err)
+	var result cmd.Result
+
+	result = assignment.CompileObjects(compiler)
+	if !result.Ok {
 		fmt.Println("-- Programa não compilou (nota: 0.0)")
+		fmt.Println("-- Dump:")
+		result.Dump()
 		return
 	}
 
-	_, err = assignment.CompileTests(compiler)
-	if err != nil {
-		fmt.Println(err)
-		fmt.Println("-- Erro interno: testes não compilaram")
+	result = assignment.CompileTests(compiler)
+	if !result.Ok {
+		fmt.Println("-- Erro do teste: testes não compilaram")
+		fmt.Println("-- Dump:")
+		result.Dump()
 		return
 	}
 
 	fmt.Println("-- Programa compilou corretamente")
-	// t.Run()
-	assignment.Teardown()
+
+	result = assignment.Run()
+	if !result.Ok {
+		fmt.Println("-- Erro: não foi possível executar o binário")
+		fmt.Println("-- Dump:")
+		result.Dump()
+		return
+	}
+
+	fmt.Println("-- Programa executou todos os testes")
+
+	assignment.TearDown()
+
+	grade, failures := assignment.Grade()
+	fmt.Println("-- Nota final:", grade)
+	for _, failure := range failures {
+		fmt.Println("- Falhou no teste " + failure)
+	}
 }

@@ -12,13 +12,13 @@
         {
             "name": "factorial0",
             "description": "Fatorial de 0 é igual a 0.",
-            "value": 10,
+            "value": 5,
             "main": "fact0.c",
             "expected": "1"
         }, {
             "name": "factorial1",
             "description": "Fatorial de 1 é igual a 1.",
-            "value": 10,
+            "value": 5,
             "main": "fact1.c",
             "expected": "1"
         }, {
@@ -36,15 +36,9 @@
         }, {
             "name": "factorial9",
             "description": "Fatorial de 9 é igual a 362880.",
-            "value": 40,
+            "value": 50,
             "main": "fact9.c",
             "expected": "362880"
-        }, {
-            "name": "assert",
-            "description": "Testes diversos.",
-            "value": 50,
-            "main": "assert.c",
-            "expected": ""
         }
     ]
 }

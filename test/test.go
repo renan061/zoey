@@ -1,5 +1,7 @@
 package test
 
+// TODO: run compilations in parallel
+
 import (
 	"encoding/json"
 	"errors"
@@ -7,28 +9,13 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/renan061/zoey/cmd"
 )
 
 var (
-	ErrInternal      = errors.New("internal error: test")
-	ErrCompilingTest = errors.New("configuration error: could not compile tests")
-
-	ErrCompilingObject = errors.New("compiling error: could not compile object")
+	ErrInternal = errors.New("internal error: test")
 )
-
-// TODO
-func abs(dir, base string) (string, error) {
-	abs, err := filepath.Abs(fmt.Sprintf("%s/%s", dir, base))
-	if err != nil {
-		fmt.Println("internal error: abs")
-		fmt.Println(err)
-		return "", ErrInternal
-	}
-	return abs, nil
-}
 
 type (
 	// TODO: Doc
@@ -64,7 +51,7 @@ type (
 		Name string `json:"name"`
 		// A brief description of the test (will be visible to the user).
 		Description string `json:"description"`
-		// The .c file containing the main function to be executed.
+		// The .c file containing the "main" function.
 		Main string `json:"main"`
 		// The value the main file should print, if any.
 		Expected string `json:"expected"`
@@ -73,10 +60,12 @@ type (
 
 		// Auxiliary
 		binary string
+		output string
+		ok     bool
 	}
 )
 
-func Setup(compiler cmd.Cmd, configuration string) (*Assignment, error) {
+func SetUp(compiler cmd.Cmd, configuration string) (*Assignment, error) {
 	// json unmarshal
 	raw, err := ioutil.ReadFile(configuration)
 	if err != nil {
@@ -119,61 +108,104 @@ func Setup(compiler cmd.Cmd, configuration string) (*Assignment, error) {
 	// sets main paths to absolute path
 	for _, test := range asgmt.Tests {
 		test.Main = asgmt.testdir + "/" + test.Main
-		test.binary = asgmt.tempdir + "/" + test.Name
+		test.binary = asgmt.tempdir + "/" + test.Name + ".out"
 	}
 
 	return &asgmt, nil
 }
 
-func (asgmt *Assignment) CompileObjects(compiler cmd.Cmd) (*cmd.Result, error) {
-	// TODO: Run in parallel
-	// compiles the object files
+func (asgmt Assignment) CompileObjects(compiler cmd.Cmd) cmd.Result {
+	// ex.: gcc -c src.c -o obj
+	// - c is the command for the compiler
+	// - src is the absolute path to the source code to be compiled
+	// - obj is the absolute path to where the object should be created
+	compile := func(c cmd.Cmd, src, obj string) cmd.Result {
+		c.AddArguments("-c", src, "-o", obj)
+		result := c.Run()
+		if result.Ok {
+			c.ResetArguments()
+		}
+		return result
+	}
+
+	// compiles the objects
 	for _, object := range asgmt.Objects {
-		result, err := compileObject(compiler, object.Source, object.Name)
-		if err != nil {
-			return result, err
+		result := compile(compiler, object.Source, object.Name)
+		if !result.Ok {
+			return result
 		}
 	}
 
-	return nil, nil
+	return cmd.Result{Ok: true}
 }
 
-func (asgmt *Assignment) CompileTests(compiler cmd.Cmd) (*cmd.Result, error) {
-	// TODO: Create function
-	// ex.: gcc temp/factorial main.c -o temp/assert.out
+func (asgmt Assignment) CompileTests(compiler cmd.Cmd) cmd.Result {
+	// ex.: gcc [obj1 obj2 ...] main.c -o bin.out
+	// - c is the command for the compiler
+	// - objs is a list with absolute paths to where the objects are located
+	// - main is the absolute path to the source with the "main" function
+	// - bin is the absolute path to where the binary should be created
+	compile := func(c cmd.Cmd, objs []string, main, bin string) cmd.Result {
+		c.AddArguments(objs...)
+		c.AddArguments(main, "-o", bin)
+		result := c.Run()
+		if result.Ok {
+			c.ResetArguments()
+		}
+		return result
+	}
+
+	// creates a list with all the objects' absolute paths
 	objects := []string{}
 	for _, object := range asgmt.Objects {
 		objects = append(objects, object.Name)
 	}
 
+	// compiles the tests
 	for _, test := range asgmt.Tests {
-		compiler.AddArguments(objects...)
-		compiler.AddArguments(test.Main, "-o", test.binary)
-		result := compiler.Run()
+		result := compile(compiler, objects, test.Main, test.binary)
 		if !result.Ok {
-			result.Dump()
-			return result, ErrCompilingTest
+			return result
 		}
-		compiler.ResetArguments()
 	}
 
-	return nil, nil
+	return cmd.Result{Ok: true}
 }
 
-// func (t Test) Run() error {
-// 	file, err := abs(t.Directory, "./temp/"+assertout)
-// 	if err != nil {
-// 		return err
-// 	}
+func (asgmt Assignment) Run() cmd.Result {
+	// runs the tests
+	for _, test := range asgmt.Tests {
+		result := cmd.New(test.binary, 10).Run()
+		if !result.Ok {
+			return result
+		}
+		test.output = string(result.StdOut)
+		test.ok = test.output == test.Expected
+	}
 
-// 	// ./temp/assert.out
-// 	result := cmd.New(file, 10).Run()
-// 	result.Dump() // TODO: ?
-// 	return nil
-// }
+	return cmd.Result{Ok: true}
+}
 
-func (asgmt Assignment) Teardown() error {
+func (asgmt Assignment) TearDown() error {
 	return removeDirectory(asgmt.tempdir)
+}
+
+func (asgmt Assignment) Grade() (uint, []string) {
+	failures := []string{}
+	total := uint(0)
+	grade := uint(0)
+	for _, test := range asgmt.Tests {
+		total += test.Value
+		if test.ok {
+			grade += test.Value
+		} else {
+			format := "'%s' (esperado: '%s', obtido: '%s')"
+			str := fmt.Sprintf(format, test.Name, test.Expected, test.output)
+			failures = append(failures, str)
+		}
+	}
+	grade = uint(float32(grade) / float32(total) * 100)
+	return grade, failures
 }
 
 // ==================================================
@@ -203,24 +235,4 @@ func removeDirectory(path string) error {
 	}
 
 	return nil
-}
-
-// ex.: gcc -c src.c -o obj
-// - src is the absolute path to the source code to be compiled
-// - obj is the absolute path to where the object should be created
-func compileObject(compiler cmd.Cmd, src, obj string) (*cmd.Result, error) {
-	compiler.AddArguments("-c", src, "-o", obj)
-	result := compiler.Run()
-	if !result.Ok {
-		result.Dump()
-		return result, ErrCompilingObject
-	}
-	compiler.ResetArguments()
-
-	return result, nil
-}
-
-// returns the name of an object file given its source file
-func objname(src string) string {
-	return strings.Split(filepath.Base(src), ".")[0]
 }
